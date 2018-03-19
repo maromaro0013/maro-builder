@@ -1,0 +1,2 @@
+NGINX=/etc/nginx/sbin/nginx
+CONFFILE=/etc/nginx/nginx.conf

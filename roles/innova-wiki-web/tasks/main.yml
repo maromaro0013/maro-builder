@@ -1,0 +1,72 @@
+- name: stop mdmonitor
+  service: name=mdmonitor state=stopped enabled=no
+  ignore_errors: yes
+  become: yes
+
+- name: stop netfs
+  service: name=netfs state=stopped enabled=no
+  ignore_errors: yes
+  become: yes
+
+- name: install necessary packages nginx
+  yum: name={{ item }} state=present
+  with_items:
+  - gcc
+  - gcc-c++
+  - make
+  - openssl-devel
+  - patch
+  - readline
+  - readline-devel
+  - pcre
+  - pcre-devel
+  - bison
+  become: yes
+
+- name: download nginx
+  command: wget 'http://nginx.org/download/nginx-1.13.9.tar.gz' chdir=/usr/src/
+  become: yes
+
+- name: extract nginx
+  command: tar xvzf /usr/src/nginx-1.13.9.tar.gz chdir=/usr/src/
+  become: yes
+
+- name: configure nginx
+  command: ./configure --user=nginx --group=nginx --with-http_ssl_module --prefix=/usr/local/nginx-1.13.9 chdir=/usr/src/nginx-1.13.9
+  become: yes
+
+- name: make nginx
+  command: make chdir=/usr/src/nginx-1.13.9
+  become: yes
+
+- name: make install nginx
+  command: make install chdir=/usr/src/nginx-1.13.9
+  become: yes
+
+- name: create symlink nginx
+  file: src=/usr/local/nginx-1.13.9 dest=/etc/nginx owner=root group=root state=link
+  become: yes
+
+- name: copy nginx initd script
+  copy: src=nginx_init dest=/etc/init.d/nginx owner=root group=root mode=0755
+  become: yes
+
+- name: copy nginx sysconfig script
+  copy: src=nginx_sysconfig dest=/etc/sysconfig/nginx owner=root group=root mode=0755
+  become: yes
+
+- name: create nginx group
+  group: name=nginx
+  become: yes
+
+- name: add nginx user
+  user: name=nginx state=present group=nginx
+  become: yes
+
+- name: copy nginx config file
+  copy: src=nginx.conf dest=/etc/nginx/conf/nginx.conf owner=root group=root mode=0755
+  become: yes
+
+- name: create nginx config directory
+  file: path=/usr/local/nginx/conf/conf.d state=directory owner=root group=root mode=0755
+  become: yes

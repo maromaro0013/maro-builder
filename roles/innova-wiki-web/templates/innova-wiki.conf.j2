@@ -14,6 +14,10 @@ server {
   ssl_certificate      /etc/ssl/clst01.innova-jp.net.cert;
   ssl_certificate_key  /etc/ssl/clst01.innova-jp.net.key.pem;
 
+  proxy_http_version 1.1;
+  proxy_set_header Upgrade $http_upgrade;
+  proxy_set_header Connection "upgrade";
+
   location / {
     root   /usr/share/nginx/html;
     index  index.html;

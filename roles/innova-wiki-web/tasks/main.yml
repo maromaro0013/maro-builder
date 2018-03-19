@@ -71,6 +71,10 @@
   file: path=/usr/local/nginx/conf/conf.d state=directory owner=root group=root mode=0755
   become: yes
 
+- name: copy innova-wiki nginx config file
+  template: src=innova-wiki.conf.j2 dest=/usr/local/nginx/conf/conf.d/innova-wiki.conf owner=root group=root mode=0600
+  become: yes
+
 - name: download nodesource
   command: wget 'https://rpm.nodesource.com/setup_6.x'
 
@@ -117,3 +121,15 @@
 
 - name: build crowi-plus
   command: npm run build:prod chdir=/var/www/crowi-plus
+
+- name: install forever
+  command: npm install -g forever
+  become: yes
+
+- name: copy ssl_certificate
+  copy: src=~/.ssh/clst01.innova-jp.net.cert dest=/etc/ssl/clst01.innova-jp.net.cert mode=0600
+  become: yes
+
+- name: copy ssl_certificate_key
+  copy: src=~/.ssh/clst01.innova-jp.net.key.pem dest=/etc/ssl/clst01.innova-jp.net.key.pem mode=0600
+  become: yes

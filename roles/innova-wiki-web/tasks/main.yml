@@ -43,6 +43,10 @@
   command: make install chdir=/usr/src/nginx-1.13.9
   become: yes
 
+- name: create symlink nginx
+  file: src=/usr/local/nginx-1.13.9 dest=/usr/local/nginx owner=root group=root state=link
+  become: yes
+
 - name: copy nginx initd script
   copy: src=nginx_init dest=/etc/init.d/nginx owner=root group=root mode=0755
   become: yes
@@ -67,26 +71,49 @@
   file: path=/usr/local/nginx/conf/conf.d state=directory owner=root group=root mode=0755
   become: yes
 
-- name: download nodejs
-  command: wget 'https://nodejs.org/download/release/v6.13.1/node-v6.13.1-linux-x64.tar.gz' chdir=/usr/src/
+- name: download nodesource
+  command: wget 'https://rpm.nodesource.com/setup_6.x'
+
+- name: exec nodesource
+  command: bash setup_6.x
   become: yes
 
-- name: extract nodejs
-  command: tar xvzf /usr/src/node-v6.13.1-linux-x64.tar.gz chdir=/usr/src/
-  become: yes
-
-- name: move nodejs
-  command: mv /usr/src/node-v6.13.1-linux-x64 /usr/local/node
-  become: yes
-
-- name: create symlink node
-  file: src=/usr/local/node/bin/node dest=/usr/local/bin/node owner=root group=root state=link
-  become: yes
-
-- name: create symlink npm
-  file: src=/usr/local/node/bin/npm dest=/usr/local/bin/npm owner=root group=root state=link
+- name: install nodejs
+  yum: name=nodejs state=latest
   become: yes
 
 - name: update npm
   command: npm install -g npm@4.6.1
   become: yes
+
+- name: create crowi-plus directory
+  file: path=/var/www/crowi-plus state=directory owner=blue group=blue mode=0755
+  become: yes
+
+- name: install git
+  yum: name=git state=latest
+  become: yes
+
+- name: clone crowi-plus
+  git: repo=https://github.com/weseek/crowi-plus.git dest=/var/www/crowi-plus update=yes
+
+- name: download yarn repository
+  command: wget https://dl.yarnpkg.com/rpm/yarn.repo
+
+- name: install yarn repository
+  command: cp yarn.repo /etc/yum.repos.d/yarn.repo
+  become: yes
+
+- name: install necessary packages yarn
+  yum: name=libuv state=latest
+  become: yes
+
+- name: install yarn
+  yum: name=yarn state=latest
+  become: yes
+
+- name: package install from yarn
+  command: yarn chdir=/var/www/crowi-plus
+
+- name: build crowi-plus
+  command: npm run build:prod chdir=/var/www/crowi-plus

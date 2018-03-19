@@ -1,0 +1,4 @@
+---
+- hosts: innova-wiki-web
+  roles:
+    - innova-wiki-web

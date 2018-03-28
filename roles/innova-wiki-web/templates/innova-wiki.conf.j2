@@ -1,8 +1,3 @@
-upstream backend_node {
-  ip_hash;
-  server 127.0.0.1:3000;
-}
-
 server {
   listen     443 ssl;
   server_name innova-wiki{{ inventory_file | regex_replace('^.*\/','') | regex_replace('production','') | regex_replace('staging','-staging') | regex_replace('development','-development') }}.clst01.innova-jp.net;
@@ -14,21 +9,11 @@ server {
   ssl_certificate      /etc/ssl/clst01.innova-jp.net.cert;
   ssl_certificate_key  /etc/ssl/clst01.innova-jp.net.key.pem;
 
-  proxy_http_version 1.1;
-  proxy_set_header Upgrade $http_upgrade;
-  proxy_set_header Connection "upgrade";
-
   location / {
-    root   /usr/share/nginx/html;
-    index  index.html;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
 
-    if ( -f $request_filename ) {
-      break;
-    }
-
-    if ( !-f $request_filename ) {
-      proxy_pass http://backend_node;
-      break;
-    }
+    proxy_pass http://127.0.0.1:3000;
   }
 }

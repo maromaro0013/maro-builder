@@ -1,10 +1,15 @@
 - name: remove ruby package
   yum: name=ruby* state=absent
-  sudo: yes
+  become: yes
 
 - name: remove mysql package
   yum: name=mysql* state=absent
-  sudo: yes
+  become: yes
+
+- name: stop netfs
+  service: name=netfs state=stopped enabled=no
+  ignore_errors: yes
+  become: yes
 
 - name: install necessary packages ruby
   yum: name={{ item }} state=present
@@ -16,31 +21,31 @@
     - patch
     - readline
     - readline-devel
-  sudo: yes
+  become: yes
 
 - name: download ruby
   command: wget 'https://cache.ruby-lang.org/pub/ruby/2.5/ruby-2.5.1.tar.gz' chdir=/usr/src/
-  sudo: yes
+  become: yes
 
 - name: extract ruby
   command: tar xvzf /usr/src/ruby-2.5.1.tar.gz chdir=/usr/src/
-  sudo: yes
+  become: yes
 
 - name: configure ruby
   command: ./configure --prefix=/usr chdir=/usr/src/ruby-2.5.1
-  sudo: yes
+  become: yes
 
 - name: make ruby
   command: make chdir=/usr/src/ruby-2.5.1
-  sudo: yes
+  become: yes
 
 - name: make install ruby
   command: make install chdir=/usr/src/ruby-2.5.1
-  sudo: yes
+  become: yes
 
 - name: install bundler
   command: gem install bundler
-  sudo: yes
+  become: yes
 
 - name: install necessary packages
   yum: name={{ item }} state=present
@@ -48,90 +53,86 @@
     - pcre
     - pcre-devel
     - bison
-  sudo: yes
-  async: 7200
-  poll: 5
+  become: yes
 
 - name: download nginx
   command: wget 'http://nginx.org/download/nginx-1.13.11.tar.gz' chdir=/usr/src/
-  sudo: yes
+  become: yes
 
 - name: extract nginx
   command: tar xvzf /usr/src/nginx-1.13.11.tar.gz chdir=/usr/src/
-  sudo: yes
+  become: yes
 
 - name: configure nginx
   command: ./configure --user=nginx --group=nginx --with-http_ssl_module --prefix=/usr/local/nginx-1.13.11 chdir=/usr/src/nginx-1.13.11
-  sudo: yes
+  become: yes
 
 - name: make nginx
   command: make chdir=/usr/src/nginx-1.13.11
-  sudo: yes
+  become: yes
 
 - name: make install nginx
   command: make install chdir=/usr/src/nginx-1.13.11
-  sudo: yes
+  become: yes
 
 - name: create symlink nginx
   file: src=/usr/local/nginx-1.13.11 dest=/usr/local/nginx owner=root group=root state=link
-  sudo: yes
+  become: yes
 
 - name: copy nginx initd script
   copy: src=nginx_init dest=/etc/init.d/nginx owner=root group=root mode=0755
-  sudo: yes
+  become: yes
 
 - name: copy nginx sysconfig script
   copy: src=nginx_sysconfig dest=/etc/sysconfig/nginx owner=root group=root mode=0755
-  sudo: yes
+  become: yes
 
 - name: install git
   yum: name=git state=present
-  sudo: yes
-  async: 7200
-  poll: 5
+  become: yes
 
 - name: create nginx group
   group: name=nginx
-  sudo: yes
+  become: yes
 
 - name: add nginx user
   user: name=nginx state=present group=nginx
-  sudo: yes
+  become: yes
 
 - name: create deploy directory
   file: path=/var/www state=directory owner=blue group=blue mode=0755
-  sudo: yes
+  become: yes
 
 - name: "copy taskalsan initd script"
   template: src=taskalsan.init.j2 dest=/etc/init.d/taskalsan owner=root group=root mode=0755
-  sudo: yes
+  become: yes
 
 - name: copy nginx config file
   copy: src=nginx.conf dest=/usr/local/nginx/conf/nginx.conf owner=root group=root mode=0755
-  sudo: yes
+  become: yes
 
 - name: create nginx config directory
   file: path=/usr/local/nginx/conf/conf.d state=directory owner=root group=root mode=0755
-  sudo: yes
+  become: yes
 
 - name: copy taskalsan nginx config file
   template: src=taskalsan.conf.j2 dest=/usr/local/nginx/conf/conf.d/taskalsan.conf owner=root group=root mode=0600
-  sudo: yes
+  become: yes
 
 - name: create shared directory
   file: path=/var/www/taskalsan/shared state=directory owner=blue group=blue mode=0755
-  sudo: yes
+  become: yes
 
 - name: create dotenv file
   file: path=/var/www/taskalsan/shared/.env.{{ inventory_file | regex_replace('^.*\/','') }} state=touch owner=blue group=blue mode=0755
-  sudo: yes
+  become: yes
 
 - name: install necessary packages nokogiri
   yum: name={{ item }} state=present
   with_items:
     - libxml2-devel
     - libxslt-devel
-  sudo: yes
+  become: yes
   async: 7200
   poll: 5
 
@@ -139,34 +140,34 @@
   yum: name={{ item }} state=present
   with_items:
     - libffi-devel
-  sudo: yes
+  become: yes
   async: 7200
   poll: 5
 
 - name: install mysql repo
   yum: name=http://dev.mysql.com/get/mysql57-community-release-el6-9.noarch.rpm state=present
-  sudo: yes
+  become: yes
 
 - name: install necessary packages mysql
   yum: name={{ item }} state=present
   with_items:
     - mysql-community-devel
-  sudo: yes
+  become: yes
   async: 7200
   poll: 5
 
 - name: install mysql server
   yum: name=mysql-community-server state=present
-  sudo: yes
+  become: yes
 
 - name: start mysql
   service: name=mysqld state=started enabled=yes
-  sudo: yes
+  become: yes
 
 - name: copy blue private key
   copy: src=~/.ssh/aws_blue.pem dest=/home/blue/.ssh/aws_blue.pem owner=blue group=blue mode=0600
-  sudo: yes
+  become: yes
 
 - name: copy blue2 private key
   copy: src=~/.ssh/aws_blue2.pem dest=/home/blue/.ssh/aws_blue2.pem owner=blue group=blue mode=0600
-  sudo: yes
+  become: yes

@@ -116,7 +116,15 @@
   become: yes
 
 - name: copy taskalsan nginx config file
-  template: src=taskalsan.conf.j2 dest=/usr/local/nginx/conf/conf.d/taskalsan.conf owner=root group=root mode=0600
+  template: src=taskalsan.conf.j2 dest=/usr/local/nginx/conf/conf.d/taskalsan.conf owner=root group=root mode=0655
+  become: yes
+
+- name: copy ssl_certificate
+  copy: src=~/.ssh/clst01.innova-jp.net.cert dest=/etc/ssl/clst01.innova-jp.net.cert mode=0600
+  become: yes
+
+- name: copy ssl_certificate_key
+  copy: src=~/.ssh/clst01.innova-jp.net.key.pem dest=/etc/ssl/clst01.innova-jp.net.key.pem mode=0600
   become: yes
 
 - name: create shared directory
@@ -133,16 +141,12 @@
     - libxml2-devel
     - libxslt-devel
   become: yes
-  async: 7200
-  poll: 5
 
 - name: install necessary packages ffi
   yum: name={{ item }} state=present
   with_items:
     - libffi-devel
   become: yes
-  async: 7200
-  poll: 5
 
 - name: install mysql repo
   yum: name=http://dev.mysql.com/get/mysql57-community-release-el6-9.noarch.rpm state=present
@@ -153,8 +157,6 @@
   with_items:
     - mysql-community-devel
   become: yes
-  async: 7200
-  poll: 5
 
 - name: install mysql server
   yum: name=mysql-community-server state=present
